@@ -6,17 +6,12 @@ L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
     attribution: '© OpenStreetMap contributors'
 }).addTo(map);
 
-// Selecionar o elemento de hover
-const hoverImage = document.getElementById('hover-image');
-
 // Função para carregar os dados CSV
 function loadCSVData(csvFile) {
-    console.log(`Carregando arquivo CSV: ${csvFile}`);
     Papa.parse(csvFile, {
         download: true,
         header: true,
         complete: function(results) {
-            console.log('Dados carregados:', results.data);
             addMarkers(results.data);
         },
         error: function(error) {
@@ -27,11 +22,6 @@ function loadCSVData(csvFile) {
 
 // Adicionar marcadores no mapa
 function addMarkers(data) {
-    if (!data || data.length === 0) {
-        console.error("Nenhum dado disponível para exibir marcadores.");
-        return;
-    }
-
     data.forEach(location => {
         if (location.lat && location.lng) {
             const lat = parseFloat(location.lat);
@@ -42,25 +32,17 @@ function addMarkers(data) {
                 return;
             }
 
+            // Conteúdo do popup com a imagem
+            const popupContent = `
+                <div>
+                    <h4>${location.name}</h4>
+                    <img src="${location.image}" alt="${location.name}" class="popup-image" />
+                </div>
+            `;
+
+            // Criar marcador e vincular popup
             const marker = L.marker([lat, lng]).addTo(map);
-
-            // Eventos de mouse para exibir/ocultar a imagem
-            marker.on('mouseover', function(e) {
-                console.log(`Mouse sobre: ${location.name}`);
-                hoverImage.src = location.image; // Atualizar a fonte da imagem
-                hoverImage.style.left = `${e.originalEvent.pageX + 10}px`;
-                hoverImage.style.top = `${e.originalEvent.pageY + 10}px`;
-                hoverImage.style.display = 'block';
-            });
-
-            marker.on('mousemove', function(e) {
-                hoverImage.style.left = `${e.originalEvent.pageX + 10}px`;
-                hoverImage.style.top = `${e.originalEvent.pageY + 10}px`;
-            });
-
-            marker.on('mouseout', function() {
-                hoverImage.style.display = 'none'; // Esconder a imagem
-            });
+            marker.bindPopup(popupContent);
         } else {
             console.warn("Dados insuficientes para criar marcador:", location);
         }
